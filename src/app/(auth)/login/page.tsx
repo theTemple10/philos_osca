@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { GitPullRequest, Github, Loader2 } from "lucide-react";
+import { GitPullRequest, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
@@ -47,7 +47,7 @@ export default function LoginPage() {
               {loading ? (
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               ) : (
-                <Github className="w-5 h-5 mr-2" />
+                <GitPullRequest className="w-5 h-5 mr-2" />
               )}
               Continue with GitHub
             </Button>
