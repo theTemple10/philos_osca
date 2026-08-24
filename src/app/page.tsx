@@ -9,7 +9,6 @@ import {
   Target,
   Sparkles,
   ArrowRight,
-  Github,
 } from "lucide-react";
 
 export default function Home() {
@@ -26,7 +25,7 @@ export default function Home() {
               <span className="font-bold text-xl text-gray-900">OSS Contributor</span>
             </div>
             <Button onClick={() => signIn("github")}>
-              <Github className="w-4 h-4 mr-2" />
+              <GitPullRequest className="w-4 h-4 mr-2" />
               Sign in with GitHub
             </Button>
           </div>
