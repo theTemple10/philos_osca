@@ -10,7 +10,6 @@ import {
   Search,
   Settings,
   LogOut,
-  Github,
 } from "lucide-react";
 
 const navigation = [

@@ -48,7 +48,7 @@ export default function Home() {
               Get Started
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-            <Button size="lg" variant="outline">
+            <Button size="lg" variant="outline" onClick={() => signIn("github")}>
               View Demo
             </Button>
           </div>

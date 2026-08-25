@@ -39,25 +39,31 @@ export async function POST(request: NextRequest) {
       }
 
       // Generate code using AI
-      const codeResult = await generateContributionCode(
+      const codeResult = (await generateContributionCode(
         userId,
         {
           title: contribution.issueTitle || "",
           body: contribution.issueBody || "",
         },
-        [], // TODO: Fetch relevant files from GitHub
+        [],
         {
           languages: {},
           topics: [],
         }
-      );
+      )) as {
+        suggested_approach?: string;
+        files?: Array<{ path: string; content: string; action: string }>;
+        commitMessage?: string;
+        prTitle?: string;
+        prBody?: string;
+      };
 
       // Store the generated code
       await prisma.contribution.update({
         where: { id: contributionId },
         data: {
           status: "coding",
-          suggestedApproach: codeResult.suggested_approach,
+          suggestedApproach: codeResult.suggested_approach || null,
         },
       });
 

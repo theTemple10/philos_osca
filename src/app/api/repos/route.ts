@@ -3,9 +3,6 @@ import { getSession, getGithubToken } from "@/lib/auth/session";
 import { fetchUserRepos, fetchRepoLanguages } from "@/lib/github/repos";
 import { prisma } from "@/lib/db";
 
-/**
- * GET /api/repos - Fetch and sync user's GitHub repositories
- */
 export async function GET() {
   try {
     const session = await getSession();
@@ -18,54 +15,62 @@ export async function GET() {
       return NextResponse.json({ error: "No GitHub token" }, { status: 401 });
     }
 
-    // Fetch repos from GitHub
     const githubRepos = await fetchUserRepos(token);
-
-    // Sync to database
     const userId = (session.user as any).id;
-    const syncedRepos = [];
+    const repoBatch = githubRepos.slice(0, 50);
 
-    for (const repo of githubRepos.slice(0, 50)) { // Limit to 50 repos
-      const languages = await fetchRepoLanguages(token, repo.full_name.split("/")[0], repo.name)
-        .catch(() => ({}));
+    const languageResults = await Promise.allSettled(
+      repoBatch.map((repo) =>
+        fetchRepoLanguages(
+          token,
+          repo.full_name.split("/")[0],
+          repo.name
+        ).catch(() => ({}))
+      )
+    );
 
-      const syncedRepo = await prisma.userRepo.upsert({
-        where: {
-          userId_githubRepoId: {
+    const syncedRepos = await Promise.all(
+      repoBatch.map((repo, i) => {
+        const languages =
+          languageResults[i].status === "fulfilled"
+            ? languageResults[i].value
+            : {};
+        return prisma.userRepo.upsert({
+          where: {
+            userId_githubRepoId: {
+              userId,
+              githubRepoId: repo.id,
+            },
+          },
+          update: {
+            name: repo.name,
+            fullName: repo.full_name,
+            description: repo.description,
+            url: repo.html_url,
+            language: repo.language,
+            languages,
+            topics: repo.topics,
+            starsCount: repo.stargazers_count,
+            forksCount: repo.forks_count,
+            lastPushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
+          },
+          create: {
             userId,
             githubRepoId: repo.id,
+            name: repo.name,
+            fullName: repo.full_name,
+            description: repo.description,
+            url: repo.html_url,
+            language: repo.language,
+            languages,
+            topics: repo.topics,
+            starsCount: repo.stargazers_count,
+            forksCount: repo.forks_count,
+            lastPushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
           },
-        },
-        update: {
-          name: repo.name,
-          fullName: repo.full_name,
-          description: repo.description,
-          url: repo.html_url,
-          language: repo.language,
-          languages,
-          topics: repo.topics,
-          starsCount: repo.stargazers_count,
-          forksCount: repo.forks_count,
-          lastPushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
-        },
-        create: {
-          userId,
-          githubRepoId: repo.id,
-          name: repo.name,
-          fullName: repo.full_name,
-          description: repo.description,
-          url: repo.html_url,
-          language: repo.language,
-          languages,
-          topics: repo.topics,
-          starsCount: repo.stargazers_count,
-          forksCount: repo.forks_count,
-          lastPushedAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
-        },
-      });
-
-      syncedRepos.push(syncedRepo);
-    }
+        });
+      })
+    );
 
     return NextResponse.json({
       repos: syncedRepos,

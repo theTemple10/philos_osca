@@ -7,6 +7,38 @@ import {
   findMatchingReposPrompt,
 } from "./prompts";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
+
+interface SkillProfile {
+  languages: Array<{ name: string; proficiency: number }>;
+  frameworks: string[];
+  strengths: string[];
+  weaknesses: string[];
+  experienceLevel: string;
+  primaryFocus: string;
+  suggestedContributionAreas: string[];
+}
+
+interface CodeResult {
+  files: Array<{ path: string; content: string; action: string; explanation: string }>;
+  commitMessage: string;
+  prTitle: string;
+  prBody: string;
+  suggested_approach?: string;
+}
+
+function safeParseJSON<T>(text: string, context: string): T {
+  const trimmed = text.trim();
+  const jsonMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const raw = jsonMatch ? jsonMatch[1].trim() : trimmed;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    throw new Error(
+      `AI returned invalid JSON for ${context}. Response starts with: ${raw.substring(0, 200)}`
+    );
+  }
+}
 
 /**
  * Analyze a user's repositories to build a skill profile
@@ -30,7 +62,7 @@ export async function analyzeUserSkills(userId: string) {
     user.repositories.map((repo) => ({
       name: repo.name,
       language: repo.language,
-      languages: repo.languages as Record<string, number> || null,
+      languages: (repo.languages as Record<string, number>) || null,
       topics: (repo.topics as string[]) || [],
       description: repo.description,
       starsCount: repo.starsCount,
@@ -43,12 +75,11 @@ export async function analyzeUserSkills(userId: string) {
     temperature: 0.3,
   });
 
-  const skillProfile = JSON.parse(text);
+  const skillProfile = safeParseJSON<SkillProfile>(text, "skill analysis");
 
-  // Update user's skill profile
   await prisma.user.update({
     where: { id: userId },
-    data: { skillProfile },
+    data: { skillProfile: skillProfile as unknown as Prisma.InputJsonValue },
   });
 
   return skillProfile;
@@ -60,7 +91,11 @@ export async function analyzeUserSkills(userId: string) {
 export async function analyzeContribution(
   userId: string,
   issue: { title: string; body: string; labels: string[] },
-  repoContext: { languages: Record<string, number>; topics: string[]; description: string }
+  repoContext: {
+    languages: Record<string, number>;
+    topics: string[];
+    description: string;
+  }
 ) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -73,11 +108,7 @@ export async function analyzeContribution(
     user.preferredAiModel
   );
 
-  const prompt = analyzeContributionPrompt(
-    issue,
-    user.skillProfile,
-    repoContext
-  );
+  const prompt = analyzeContributionPrompt(issue, user.skillProfile, repoContext);
 
   const { text } = await generateText({
     model: getAIProvider(providerConfig),
@@ -85,7 +116,7 @@ export async function analyzeContribution(
     temperature: 0.2,
   });
 
-  return JSON.parse(text);
+  return safeParseJSON(text, "contribution analysis");
 }
 
 /**
@@ -118,10 +149,9 @@ export async function generateContributionCode(
     model: getAIProvider(providerConfig),
     prompt,
     temperature: 0.4,
-    maxTokens: 8000,
   });
 
-  return JSON.parse(text);
+  return safeParseJSON<CodeResult>(text, "code generation");
 }
 
 /**
@@ -149,5 +179,5 @@ export async function findMatchingRepositories(userId: string) {
     temperature: 0.3,
   });
 
-  return JSON.parse(text);
+  return safeParseJSON(text, "repo discovery");
 }

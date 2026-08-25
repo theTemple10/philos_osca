@@ -121,16 +121,18 @@ export async function createOrUpdateFiles(
 export async function createPullRequest(accessToken: string, params: CreatePRParams) {
   const octokit = createGitHubClient(accessToken);
 
-  // First, create/update files on a new branch
+  const branchName = params.head.includes(":")
+    ? params.head.split(":")[1]
+    : params.head;
+
   await createOrUpdateFiles(
     accessToken,
     params.owner,
     params.repo,
-    params.head,
+    branchName,
     params.files
   );
 
-  // Then create the PR
   const { data: pr } = await octokit.rest.pulls.create({
     owner: params.owner,
     repo: params.repo,

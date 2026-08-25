@@ -22,13 +22,32 @@ export default function SettingsPage() {
     if (status === "unauthenticated") {
       router.push("/login");
     }
+    if (status === "authenticated") {
+      fetchSettings();
+    }
   }, [status]);
+
+  async function fetchSettings() {
+    try {
+      const res = await fetch("/api/settings");
+      const data = await res.json();
+      if (data.aiProvider) setAiProvider(data.aiProvider);
+      if (data.aiModel) setAiModel(data.aiModel);
+      if (data.difficulty) setDifficulty(data.difficulty);
+    } catch {
+      // use defaults
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
     try {
-      // In production, this would update user preferences in the database
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ aiProvider, aiModel, difficulty }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {

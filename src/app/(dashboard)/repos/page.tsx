@@ -55,24 +55,9 @@ export default function ReposPage() {
   async function discoverRepos() {
     setLoading(true);
     try {
-      // Use Python service for AI-powered discovery
-      const pythonUrl = process.env.NEXT_PUBLIC_PYTHON_SERVICE_URL || "http://localhost:8000";
-
-      // Get user skills for discovery
-      const skillRes = await fetch("/api/analyze");
-      const skillData = await skillRes.json();
-
-      const response = await fetch(`${pythonUrl}/discover/repositories`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(skillData.skillProfile || {}),
-      });
-
-      const suggestions = await response.json();
-
-      // For now, show a demo list of repos
-      // In production, this would use GitHub search API
-      setRepos([]);
+      const res = await fetch("/api/repos/discover");
+      const data = await res.json();
+      setRepos(data.repos || []);
     } catch (error) {
       console.error("Error discovering repos:", error);
     } finally {

@@ -70,8 +70,9 @@ export default function ContributePage() {
 
   async function fetchContributions() {
     try {
-      // In production, this would fetch from the database
-      setContributions([]);
+      const res = await fetch("/api/contributions");
+      const data = await res.json();
+      setContributions(data.contributions || []);
     } catch (error) {
       console.error("Error fetching contributions:", error);
     } finally {

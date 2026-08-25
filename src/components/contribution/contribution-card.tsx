@@ -3,7 +3,7 @@
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn, getDifficultyColor, getStatusColor } from "@/lib/utils";
+import { cn, getDifficultyColor } from "@/lib/utils";
 import { ExternalLink, Clock, Zap, ArrowRight } from "lucide-react";
 
 interface ContributionCardProps {

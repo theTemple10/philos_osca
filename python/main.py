@@ -12,16 +12,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import os
+
+load_dotenv()
+
 app = FastAPI(
     title="OSS Contributor Analysis Service",
     description="Python service for AI-powered open source contribution analysis",
     version="0.1.0",
 )
 
-# CORS for Next.js frontend
+ALLOWED_ORIGINS = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:8000",
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
