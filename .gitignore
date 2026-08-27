@@ -23,6 +23,11 @@
 # misc
 .DS_Store
 *.pem
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
 
 # debug
 npm-debug.log*
@@ -36,14 +41,6 @@ yarn-error.log*
 
 # vercel
 .vercel
-
-# python
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-venv/
-.python-version
 
 # typescript
 *.tsbuildinfo

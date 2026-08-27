@@ -9,6 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { AVAILABLE_MODELS, AIProvider } from "@/lib/ai/providers";
 import { Settings, Save, Brain, Shield, AlertCircle } from "lucide-react";
 
+const PROVIDER_INFO: Record<AIProvider, { label: string; description: string; badge?: string }> = {
+  openai: { label: "OpenAI", description: "GPT-4o, GPT-4o Mini, o3-mini" },
+  anthropic: { label: "Anthropic", description: "Claude Sonnet 4, Claude 3.5 Haiku" },
+  groq: { label: "Groq", description: "Llama 3.3 70B, Mixtral — Free tier!", badge: "Free" },
+  gemini: { label: "Google Gemini", description: "Gemini 2.0 Flash — Free tier!", badge: "Free" },
+};
+
 export default function SettingsPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -84,32 +91,38 @@ export default function SettingsPage() {
               Provider
             </label>
             <div className="grid grid-cols-2 gap-4">
-              {(["openai", "anthropic"] as AIProvider[]).map((provider) => (
-                <button
-                  key={provider}
-                  onClick={() => {
-                    setAiProvider(provider);
-                    setAiModel(AVAILABLE_MODELS[provider][0].id);
-                  }}
-                  className={`p-4 rounded-lg border-2 text-left transition-all ${
-                    aiProvider === provider
-                      ? "border-indigo-500 bg-indigo-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium capitalize">{provider}</span>
-                    {aiProvider === provider && (
-                      <Badge variant="success">Selected</Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {provider === "openai"
-                      ? "GPT-4o, GPT-4o Mini, o3-mini"
-                      : "Claude Sonnet 4, Claude 3.5 Haiku"}
-                  </p>
-                </button>
-              ))}
+              {(["openai", "anthropic", "groq", "gemini"] as AIProvider[]).map((provider) => {
+                const info = PROVIDER_INFO[provider];
+                return (
+                  <button
+                    key={provider}
+                    onClick={() => {
+                      setAiProvider(provider);
+                      setAiModel(AVAILABLE_MODELS[provider][0].id);
+                    }}
+                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                      aiProvider === provider
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{info.label}</span>
+                      <div className="flex items-center gap-2">
+                        {info.badge && (
+                          <Badge variant="success">{info.badge}</Badge>
+                        )}
+                        {aiProvider === provider && (
+                          <Badge variant="info">Selected</Badge>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {info.description}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -149,6 +162,7 @@ export default function SettingsPage() {
                 </p>
                 <p className="text-sm text-yellow-700 mt-1">
                   Make sure to set your API key in the environment variables.
+                  Groq and Gemini offer free tiers — no credit card needed.
                   See{" "}
                   <code className="bg-yellow-100 px-1 rounded">.env.example</code>{" "}
                   for details.

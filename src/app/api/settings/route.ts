@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 
 const updateSettingsSchema = z.object({
-  aiProvider: z.enum(["openai", "anthropic"]).optional(),
+  aiProvider: z.enum(["openai", "anthropic", "groq", "gemini"]).optional(),
   aiModel: z.string().min(1).optional(),
   difficulty: z.enum(["beginner", "intermediate", "advanced", "adaptive"]).optional(),
 });
@@ -25,9 +25,17 @@ export async function GET() {
       },
     });
 
+    const defaultModels: Record<string, string> = {
+      openai: "gpt-4o",
+      anthropic: "claude-sonnet-4-20250514",
+      groq: "llama-3.3-70b-versatile",
+      gemini: "gemini-2.0-flash",
+    };
+
+    const provider = user?.preferredAiProvider || "openai";
     return NextResponse.json({
-      aiProvider: user?.preferredAiProvider || "openai",
-      aiModel: user?.preferredAiModel || "gpt-4o",
+      aiProvider: provider,
+      aiModel: user?.preferredAiModel || defaultModels[provider] || "gpt-4o",
       difficulty: user?.difficultyLevel || "adaptive",
     });
   } catch (error) {
