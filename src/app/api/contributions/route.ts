@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
 
     const contributions = await prisma.contribution.findMany({
       where: { userId },

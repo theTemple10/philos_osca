@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SkillMap } from "@/components/dashboard/skill-map";
+import { SkillMap, type SkillMapProps } from "@/components/dashboard/skill-map";
 import {
   GitPullRequest,
   Brain,
@@ -19,7 +19,10 @@ interface UserStats {
   totalRepos: number;
   totalContributions: number;
   totalPRs: number;
-  skillProfile: any;
+  skillProfile: {
+    languages?: { name: string; proficiency: number }[];
+    frameworks?: string[];
+  } | null;
 }
 
 export default function DashboardPage() {
@@ -27,17 +30,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-      return;
-    }
-
-    if (status === "authenticated") {
-      fetchStats();
-    }
-  }, [status]);
+  const [, startTransition] = useTransition();
 
   async function fetchStats() {
     try {
@@ -61,6 +54,19 @@ export default function DashboardPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    if (status === "authenticated") {
+      startTransition(() => {
+        fetchStats();
+      });
+    }
+  }, [status]);
 
   async function analyzeSkills() {
     try {
@@ -150,12 +156,12 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {stats?.skillProfile
+                  {stats?.skillProfile?.languages && stats.skillProfile.languages.length > 0
                     ? Math.round(
-                        stats.skillProfile.languages?.reduce(
-                          (acc: number, l: any) => acc + l.proficiency,
+                        (stats.skillProfile.languages.reduce(
+                          (acc: number, l: { proficiency: number }) => acc + l.proficiency,
                           0
-                        ) / (stats.skillProfile.languages?.length || 1) * 100
+                        ) / stats.skillProfile.languages.length) * 100
                       ) + "%"
                     : "—"}
                 </p>
@@ -170,7 +176,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Skill Map */}
         <div>
-          <SkillMap skillProfile={stats?.skillProfile || null} />
+          <SkillMap skillProfile={stats?.skillProfile as SkillMapProps['skillProfile'] || null} />
           {!stats?.skillProfile && (
             <Button className="mt-4" onClick={analyzeSkills}>
               <Brain className="w-4 h-4 mr-2" />

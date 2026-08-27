@@ -11,7 +11,7 @@ export async function GET() {
 
     const user = await import("@/lib/db").then((m) =>
       m.prisma.user.findUnique({
-        where: { id: (session.user as any).id },
+        where: { id: (session.user as { id: string }).id },
         select: { skillProfile: true, difficultyLevel: true },
       })
     );

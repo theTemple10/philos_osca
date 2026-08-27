@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, user }) {
       if (session.user && user) {
-        (session.user as any).id = user.id;
+        (session.user as { id: string }).id = user.id;
 
         // Fetch GitHub tokens from account
         const account = await prisma.account.findFirst({
@@ -30,7 +30,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (account) {
-          (session as any).accessToken = account.access_token;
+          (session as { accessToken?: string }).accessToken = account.access_token ?? undefined;
         }
       }
       return session;

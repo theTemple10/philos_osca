@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -10,22 +10,14 @@ import { AVAILABLE_MODELS, AIProvider } from "@/lib/ai/providers";
 import { Settings, Save, Brain, Shield, AlertCircle } from "lucide-react";
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [aiProvider, setAiProvider] = useState<AIProvider>("openai");
   const [aiModel, setAiModel] = useState("gpt-4o");
   const [difficulty, setDifficulty] = useState("adaptive");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
-    if (status === "authenticated") {
-      fetchSettings();
-    }
-  }, [status]);
+  const [, startTransition] = useTransition();
 
   async function fetchSettings() {
     try {
@@ -38,6 +30,17 @@ export default function SettingsPage() {
       // use defaults
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+    if (status === "authenticated") {
+      startTransition(() => {
+        fetchSettings();
+      });
+    }
+  }, [status]);
 
   async function handleSave() {
     setSaving(true);

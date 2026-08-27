@@ -108,7 +108,7 @@ export async function analyzeContribution(
     user.preferredAiModel
   );
 
-  const prompt = analyzeContributionPrompt(issue, user.skillProfile, repoContext);
+  const prompt = analyzeContributionPrompt(issue, user.skillProfile as Record<string, unknown> | null, repoContext);
 
   const { text } = await generateText({
     model: getAIProvider(providerConfig),
@@ -169,7 +169,7 @@ export async function findMatchingRepositories(userId: string) {
     user.preferredAiModel
   );
 
-  const prompt = findMatchingReposPrompt(user.skillProfile, {
+  const prompt = findMatchingReposPrompt(user.skillProfile as Record<string, unknown> | null, {
     difficulty: user.difficultyLevel || undefined,
   });
 

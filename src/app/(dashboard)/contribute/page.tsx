@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
@@ -13,8 +13,6 @@ import {
   CheckCircle,
   ExternalLink,
   Loader2,
-  ArrowRight,
-  AlertCircle,
 } from "lucide-react";
 
 interface Contribution {
@@ -44,7 +42,7 @@ interface GeneratedCode {
 }
 
 export default function ContributePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [selectedContribution, setSelectedContribution] =
@@ -56,17 +54,7 @@ export default function ContributePage() {
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [prUrl, setPrUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-      return;
-    }
-
-    if (status === "authenticated") {
-      fetchContributions();
-    }
-  }, [status]);
+  const [, startTransition] = useTransition();
 
   async function fetchContributions() {
     try {
@@ -79,6 +67,19 @@ export default function ContributePage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    if (status === "authenticated") {
+      startTransition(() => {
+        fetchContributions();
+      });
+    }
+  }, [status]);
 
   async function handleSelect(contributionId: string) {
     const contribution = contributions.find((c) => c.id === contributionId);

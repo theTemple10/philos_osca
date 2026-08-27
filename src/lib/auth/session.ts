@@ -11,7 +11,7 @@ export async function getCurrentUser() {
   if (!session?.user) return null;
 
   const user = await prisma.user.findUnique({
-    where: { id: (session.user as any).id },
+    where: { id: (session.user as { id: string }).id },
     include: {
       accounts: true,
     },
@@ -22,8 +22,8 @@ export async function getCurrentUser() {
 
 export async function getGithubToken(): Promise<string | null> {
   const session = await getSession();
-  if (!(session as any)?.accessToken) return null;
-  return (session as any).accessToken as string;
+  if (!(session as { accessToken?: string })?.accessToken) return null;
+  return (session as { accessToken?: string }).accessToken as string;
 }
 
 // Type augmentation for next-auth

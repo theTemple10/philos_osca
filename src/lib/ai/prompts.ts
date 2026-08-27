@@ -32,7 +32,7 @@ Respond ONLY with valid JSON.`;
  */
 export function analyzeContributionPrompt(
   issue: { title: string; body: string; labels: string[] },
-  userSkills: any,
+  userSkills: Record<string, unknown> | null,
   repoContext: { languages: Record<string, number>; topics: string[]; description: string }
 ) {
   return `Analyze this open source issue and determine if it's a good match for the developer.
@@ -112,7 +112,7 @@ Respond ONLY with valid JSON.`;
  * Prompt for finding matching repositories
  */
 export function findMatchingReposPrompt(
-  userSkills: any,
+  userSkills: Record<string, unknown> | null,
   preferences?: { languages?: string[]; topics?: string[]; difficulty?: string }
 ) {
   return `Based on the developer's skill profile, suggest open source repositories they could contribute to.

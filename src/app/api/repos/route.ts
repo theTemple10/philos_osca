@@ -16,7 +16,7 @@ export async function GET() {
     }
 
     const githubRepos = await fetchUserRepos(token);
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const repoBatch = githubRepos.slice(0, 50);
 
     const languageResults = await Promise.allSettled(

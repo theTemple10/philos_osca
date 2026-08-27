@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { z } from "zod";
+
+const updateSettingsSchema = z.object({
+  aiProvider: z.enum(["openai", "anthropic"]).optional(),
+  aiModel: z.string().min(1).optional(),
+  difficulty: z.enum(["beginner", "intermediate", "advanced", "adaptive"]).optional(),
+});
 
 export async function GET() {
   try {
@@ -10,7 +17,7 @@ export async function GET() {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: (session.user as any).id },
+      where: { id: (session.user as { id: string }).id },
       select: {
         preferredAiProvider: true,
         preferredAiModel: true,
@@ -40,19 +47,25 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { aiProvider, aiModel, difficulty } = body;
+    const parsed = updateSettingsSchema.parse(body);
 
     await prisma.user.update({
-      where: { id: (session.user as any).id },
+      where: { id: (session.user as { id: string }).id },
       data: {
-        ...(aiProvider && { preferredAiProvider: aiProvider }),
-        ...(aiModel && { preferredAiModel: aiModel }),
-        ...(difficulty && { difficultyLevel: difficulty }),
+        ...(parsed.aiProvider && { preferredAiProvider: parsed.aiProvider }),
+        ...(parsed.aiModel && { preferredAiModel: parsed.aiModel }),
+        ...(parsed.difficulty && { difficultyLevel: parsed.difficulty }),
       },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Invalid input", details: error.issues },
+        { status: 400 }
+      );
+    }
     console.error("Error updating settings:", error);
     return NextResponse.json(
       { error: "Failed to update settings" },

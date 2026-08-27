@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { cn, getLanguageColor } from "@/lib/utils";
+import { getLanguageColor } from "@/lib/utils";
 
 interface Skill {
   name: string;
@@ -9,14 +9,14 @@ interface Skill {
   years?: string;
 }
 
-interface SkillMapProps {
+export interface SkillMapProps {
   skillProfile: {
-    languages: Skill[];
-    frameworks: string[];
-    strengths: string[];
-    weaknesses: string[];
-    experienceLevel: string;
-    primaryFocus: string;
+    languages?: Skill[];
+    frameworks?: string[];
+    strengths?: string[];
+    weaknesses?: string[];
+    experienceLevel?: string;
+    primaryFocus?: string;
   } | null;
 }
 
@@ -51,7 +51,7 @@ export function SkillMap({ skillProfile }: SkillMapProps) {
         <div>
           <h4 className="text-sm font-medium text-gray-700 mb-3">Languages</h4>
           <div className="space-y-2">
-            {skillProfile.languages.slice(0, 8).map((lang) => (
+            {skillProfile.languages?.slice(0, 8).map((lang) => (
               <div key={lang.name} className="flex items-center gap-3">
                 <div
                   className="w-3 h-3 rounded-full"
@@ -76,7 +76,7 @@ export function SkillMap({ skillProfile }: SkillMapProps) {
         </div>
 
         {/* Frameworks */}
-        {skillProfile.frameworks.length > 0 && (
+        {skillProfile.frameworks && skillProfile.frameworks.length > 0 && (
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-2">Frameworks</h4>
             <div className="flex flex-wrap gap-2">
@@ -97,7 +97,7 @@ export function SkillMap({ skillProfile }: SkillMapProps) {
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-2">Strengths</h4>
             <ul className="space-y-1">
-              {skillProfile.strengths.map((strength) => (
+              {skillProfile.strengths?.map((strength) => (
                 <li key={strength} className="text-sm text-green-600 flex items-center gap-2">
                   <span>✓</span>
                   {strength}
@@ -108,7 +108,7 @@ export function SkillMap({ skillProfile }: SkillMapProps) {
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-2">Areas to Improve</h4>
             <ul className="space-y-1">
-              {skillProfile.weaknesses.map((weakness) => (
+              {skillProfile.weaknesses?.map((weakness) => (
                 <li key={weakness} className="text-sm text-orange-600 flex items-center gap-2">
                   <span>→</span>
                   {weakness}

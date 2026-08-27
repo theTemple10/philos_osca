@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { RepoCard } from "@/components/dashboard/repo-card";
-import { Search, Filter, Loader2, Brain, RefreshCw } from "lucide-react";
+import { Search, Loader2, Brain, RefreshCw } from "lucide-react";
 
 interface DiscoveredRepo {
   id: number;
@@ -22,25 +21,24 @@ interface DiscoveredRepo {
 }
 
 export default function ReposPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [repos, setRepos] = useState<DiscoveredRepo[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
-  const [myRepos, setMyRepos] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-      return;
-    }
-
-    if (status === "authenticated") {
-      fetchMyRepos();
-      discoverRepos();
-    }
-  }, [status]);
+  const [myRepos, setMyRepos] = useState<Array<{
+    id: number;
+    name: string;
+    fullName: string;
+    description: string | null;
+    url: string;
+    language: string | null;
+    starsCount: number;
+    forksCount: number;
+    topics: string[];
+  }>>([]);
+  const [, startTransition] = useTransition();
 
   async function fetchMyRepos() {
     try {
@@ -64,6 +62,20 @@ export default function ReposPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    if (status === "authenticated") {
+      startTransition(() => {
+        fetchMyRepos();
+        discoverRepos();
+      });
+    }
+  }, [status]);
 
   const filteredRepos = repos.filter((repo) => {
     const matchesSearch =
